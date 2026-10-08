@@ -164,6 +164,53 @@
       margin-bottom: 25px;
     }
 
+    /* CUPOM */
+
+    .coupon-box {
+      margin-bottom: 20px;
+    }
+
+    .coupon-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .coupon-row input {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    .coupon-button {
+      height: 52px;
+      padding: 0 18px;
+      border: 1px solid #39ff14;
+      border-radius: 12px;
+      background: transparent;
+      color: #39ff14;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .coupon-button:hover {
+      background: #39ff14;
+      color: #031003;
+    }
+
+    .coupon-message {
+      display: none;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+
+    .coupon-success {
+      color: #39ff14;
+    }
+
+    .coupon-error {
+      color: #ff6464;
+    }
+
     .result {
       border-radius: 16px;
       border: 1px solid rgba(57, 255, 20, 0.35);
@@ -200,6 +247,14 @@
       color: #39ff14;
       text-shadow: 0 0 12px rgba(57, 255, 20, 0.45);
       white-space: nowrap;
+    }
+
+    .original-price {
+      color: #687368;
+      font-size: 13px;
+      text-decoration: line-through;
+      margin-bottom: 4px;
+      text-align: right;
     }
 
     .button {
@@ -272,6 +327,18 @@
       .result-price {
         font-size: 26px;
       }
+
+      .coupon-row {
+        flex-direction: column;
+      }
+
+      .coupon-button {
+        width: 100%;
+      }
+
+      .original-price {
+        text-align: left;
+      }
     }
   </style>
 </head>
@@ -303,7 +370,7 @@
         type="text"
         id="username"
         value=""
-        placeholder="Ex: hardblox123"
+        placeholder="Ex: fazin123"
         autocomplete="off"
       >
 
@@ -342,6 +409,40 @@
         <span>10.000</span>
       </div>
 
+      <!-- CUPOM -->
+
+      <div class="coupon-box">
+
+        <label for="couponInput">
+          🎟️ Cupom de desconto
+        </label>
+
+        <div class="coupon-row">
+
+          <input
+            type="text"
+            id="couponInput"
+            placeholder="Digite seu cupom"
+            autocomplete="off"
+          >
+
+          <button
+            type="button"
+            class="coupon-button"
+            id="couponButton"
+          >
+            APLICAR
+          </button>
+
+        </div>
+
+        <div
+          class="coupon-message"
+          id="couponMessage"
+        ></div>
+
+      </div>
+
       <div class="result">
 
         <div class="result-top">
@@ -354,8 +455,22 @@
             <span id="resultRobux">0</span> Robux
           </div>
 
-          <div class="result-price" id="resultPrice">
-            R$ 0,00
+          <div>
+
+            <div
+              class="original-price"
+              id="originalPrice"
+            >
+              R$ 0,00
+            </div>
+
+            <div
+              class="result-price"
+              id="resultPrice"
+            >
+              R$ 0,00
+            </div>
+
           </div>
 
         </div>
@@ -389,6 +504,11 @@
 
     const PRICE_PER_1000 = 49.99;
 
+    const COUPON_CODE = "FAZIN";
+
+    const COUPON_DISCOUNT = 0.01;
+
+
     const range =
       document.getElementById("robuxRange");
 
@@ -404,6 +524,9 @@
     const resultPrice =
       document.getElementById("resultPrice");
 
+    const originalPrice =
+      document.getElementById("originalPrice");
+
     const username =
       document.getElementById("username");
 
@@ -413,6 +536,18 @@
     const continueButton =
       document.getElementById("continueButton");
 
+    const couponInput =
+      document.getElementById("couponInput");
+
+    const couponButton =
+      document.getElementById("couponButton");
+
+    const couponMessage =
+      document.getElementById("couponMessage");
+
+
+    let couponApplied = false;
+
 
     function formatPrice(value) {
 
@@ -420,6 +555,28 @@
         style: "currency",
         currency: "BRL"
       });
+
+    }
+
+
+    function getPrices() {
+
+      const robux =
+        Number(robuxInput.value) || 0;
+
+      const original =
+        (robux / 1000) * PRICE_PER_1000;
+
+      const finalPrice =
+        couponApplied
+          ? original * (1 - COUPON_DISCOUNT)
+          : original;
+
+      return {
+        robux,
+        original,
+        finalPrice
+      };
 
     }
 
@@ -445,8 +602,13 @@
       range.value = robux;
       robuxInput.value = robux;
 
-      const price =
+      const original =
         (robux / 1000) * PRICE_PER_1000;
+
+      const price =
+        couponApplied
+          ? original * (1 - COUPON_DISCOUNT)
+          : original;
 
       robuxNumber.textContent =
         robux.toLocaleString("pt-BR");
@@ -454,8 +616,17 @@
       resultRobux.textContent =
         robux.toLocaleString("pt-BR");
 
+      originalPrice.textContent =
+        formatPrice(original);
+
       resultPrice.textContent =
         formatPrice(price);
+
+      if (couponApplied) {
+        originalPrice.style.display = "block";
+      } else {
+        originalPrice.style.display = "none";
+      }
 
       const percentage =
         (robux / 10000) * 100;
@@ -505,55 +676,125 @@
     );
 
 
+    // APLICAR CUPOM
+
+    couponButton.addEventListener(
+      "click",
+      function() {
+
+        const coupon =
+          couponInput.value
+            .trim()
+            .toUpperCase();
+
+        if (coupon === COUPON_CODE) {
+
+          couponApplied = true;
+
+          couponMessage.textContent =
+            "✅ Cupom FAZIN aplicado! 1% de desconto.";
+
+          couponMessage.className =
+            "coupon-message coupon-success";
+
+          couponMessage.style.display =
+            "block";
+
+          updateCalculator(
+            robuxInput.value
+          );
+
+        } else {
+
+          couponApplied = false;
+
+          couponMessage.textContent =
+            "❌ Cupom inválido.";
+
+          couponMessage.className =
+            "coupon-message coupon-error";
+
+          couponMessage.style.display =
+            "block";
+
+          updateCalculator(
+            robuxInput.value
+          );
+
+        }
+
+      }
+    );
+
+
     // BOTÃO CONTINUAR
-continueButton.addEventListener(
-  "click",
-  async function() {
 
-    const user =
-      username.value.trim();
+    continueButton.addEventListener(
+      "click",
+      async function() {
 
-    if (!user) {
+        const user =
+          username.value.trim();
 
-      warning.style.display = "block";
+        if (!user) {
 
-      username.focus();
+          warning.style.display =
+            "block";
 
-      return;
-    }
+          username.focus();
 
-    warning.style.display = "none";
+          return;
+        }
 
-    const robux =
-      Number(robuxInput.value);
+        warning.style.display =
+          "none";
 
-    const price =
-      (robux / 1000) * PRICE_PER_1000;
+        const prices =
+          getPrices();
 
-    const orderText =
+        const couponText =
+          couponApplied
+            ? "FAZIN"
+            : "Nenhum";
+
+        const discountText =
+          couponApplied
+            ? "1%"
+            : "0%";
+
+        const orderText =
 `🛒 PEDIDO HARDBUX
 
 👤 Usuário: ${user}
-🟢 Robux: ${robux.toLocaleString("pt-BR")}
-💰 Valor: ${formatPrice(price)}`;
+🟢 Robux: ${prices.robux.toLocaleString("pt-BR")}
+🎟️ Cupom: ${couponText}
+💸 Desconto: ${discountText}
+💰 Valor original: ${formatPrice(prices.original)}
+💰 Valor final: ${formatPrice(prices.finalPrice)}`;
 
-    try {
+        try {
 
-      await navigator.clipboard.writeText(orderText);
+          await navigator.clipboard.writeText(
+            orderText
+          );
 
-      alert("✅ Pedido copiado! Agora é só colar no Discord.");
+          alert(
+            "✅ Pedido copiado! Agora é só colar no Discord."
+          );
 
-    } catch (error) {
+        } catch (error) {
 
-      alert("Pedido preparado. Copie e cole no Discord.");
+          alert(
+            "Pedido preparado. Copie e cole no Discord."
+          );
 
-    }
+        }
 
-    window.location.href =
-      "https://discord.gg/8ryRMmvsQC";
+        window.location.href =
+          "https://discord.gg/8ryRMmvsQC";
 
-  }
-);
+      }
+    );
 
 
     updateCalculator(0);
