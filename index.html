@@ -506,29 +506,54 @@
 
 
     // BOTÃO CONTINUAR
-    continueButton.addEventListener(
-      "click",
-      function() {
+continueButton.addEventListener(
+  "click",
+  async function() {
 
-        const user =
-          username.value.trim();
+    const user =
+      username.value.trim();
 
-        if (!user) {
+    if (!user) {
 
-          warning.style.display = "block";
+      warning.style.display = "block";
 
-          username.focus();
+      username.focus();
 
-          return;
-        }
+      return;
+    }
 
-        warning.style.display = "none";
+    warning.style.display = "none";
 
-        window.location.href =
-          "https://discord.gg/8ryRMmvsQC";
+    const robux =
+      Number(robuxInput.value);
 
-      }
-    );
+    const price =
+      (robux / 1000) * PRICE_PER_1000;
+
+    const orderText =
+`🛒 PEDIDO HARDBUX
+
+👤 Usuário: ${user}
+🟢 Robux: ${robux.toLocaleString("pt-BR")}
+💰 Valor: ${formatPrice(price)}`;
+
+    try {
+
+      await navigator.clipboard.writeText(orderText);
+
+      alert("✅ Pedido copiado! Agora é só colar no Discord.");
+
+    } catch (error) {
+
+      alert("Pedido preparado. Copie e cole no Discord.");
+
+    }
+
+    window.location.href =
+      "https://discord.gg/8ryRMmvsQC";
+
+  }
+);
 
 
     updateCalculator(0);
